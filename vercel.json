@@ -1,9 +1,14 @@
 {
   "version": 2,
-  "builds": [
+  "functions": {
+    "app.py": {
+      "runtime": "@vercel/python"
+    }
+  },
+  "rewrites": [
     {
-      "src": "app.py",
-      "use": "@vercel/python"
+      "source": "/(.*)",
+      "destination": "/app.py"
     }
   ]
 }
