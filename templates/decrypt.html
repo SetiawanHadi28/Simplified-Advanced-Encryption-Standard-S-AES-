@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Decrypt{% endblock %}
+
+{% block content %}
+
+<section class="page-hero page-hero-sm">
+  <div class="container position-relative">
+    <span class="hero-eyebrow"><i class="bi bi-unlock-fill"></i> Dekripsi</span>
+    <h1 class="mt-3 mb-2" style="font-size:2.4rem;">Dekripsi S-AES</h1>
+    <p class="lead mb-0">Masukkan ciphertext dan key 16-bit untuk melihat seluruh proses invers secara rinci.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+
+    <!-- ================= FORM ================= -->
+    <div class="saes-form-panel mb-5">
+      <form method="POST" action="{{ url_for('decrypt_page') }}" novalidate>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="ciphertext" class="form-label saes-label">
+              <i class="bi bi-file-earmark-binary me-1"></i>Ciphertext (16-bit biner)
+            </label>
+            <input type="text" class="form-control bit-input" id="ciphertext" name="ciphertext"
+                   value="{{ ciphertext }}" placeholder="cth: 0111010001010001"
+                   maxlength="16" autocomplete="off" data-bit-input data-counter-target="ct-counter" required>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="bit-counter" id="ct-counter">0 / 16 bit</span>
+              <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-random-fill="ciphertext">
+                <i class="bi bi-shuffle me-1"></i>Acak
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="key" class="form-label saes-label">
+              <i class="bi bi-key-fill me-1"></i>Key (16-bit biner)
+            </label>
+            <input type="text" class="form-control bit-input" id="key" name="key"
+                   value="{{ key }}" placeholder="cth: 0100101011110101"
+                   maxlength="16" autocomplete="off" data-bit-input data-counter-target="key-counter" required>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="bit-counter" id="key-counter">0 / 16 bit</span>
+              <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-random-fill="key">
+                <i class="bi bi-shuffle me-1"></i>Acak
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 d-flex gap-3 flex-wrap align-items-center">
+          <button type="submit" class="btn btn-saes-primary px-4">
+            <i class="bi bi-unlock-fill me-2"></i>Dekripsi Sekarang
+          </button>
+          <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Hanya karakter 0 dan 1, panjang tepat 16 bit.</span>
+        </div>
+      </form>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger d-flex align-items-center gap-2 shadow-sm rounded-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+      <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <div id="hasil" data-has-result="{{ 'true' if result else 'false' }}"></div>
+
+    {% if result %}
+    <!-- ================= HASIL AKHIR ================= -->
+    <div class="result-panel mb-5">
+      <div class="row gy-4 align-items-center">
+        <div class="col-lg-8">
+          <span class="section-title-badge" style="color:#67e8f9;"><i class="bi bi-check-circle-fill"></i> Dekripsi Berhasil</span>
+          <div class="mt-3">
+            <div class="small mb-1" style="color:#94a3b8;">Plaintext (Biner)</div>
+            <div class="result-value">{{ result.plaintext_bits }}</div>
+          </div>
+          <div class="mt-3">
+            <div class="small mb-1" style="color:#94a3b8;">Plaintext (Heksadesimal)</div>
+            <div class="result-value">0x{{ result.plaintext_hex }}</div>
+          </div>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <button class="result-copy-btn mb-2" data-copy-value="{{ result.plaintext_bits }}">
+            <i class="bi bi-clipboard me-1"></i>Salin Biner
+          </button><br>
+          <button class="result-copy-btn" data-copy-value="{{ result.plaintext_hex }}">
+            <i class="bi bi-clipboard me-1"></i>Salin Hex
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP BY STEP ================= -->
+    <div class="mb-4 d-flex align-items-center gap-2">
+      <span class="section-title-badge"><i class="bi bi-list-ol"></i> Visualisasi Proses Invers</span>
+    </div>
+
+    <div class="accordion" id="decryptAccordion">
+
+      <!-- ===== KEY EXPANSION (sama seperti enkripsi) ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseKE">
+            <i class="bi bi-key me-2"></i>1. Key Expansion
+          </button>
+        </h2>
+        <div id="dcollapseKE" class="accordion-collapse collapse show" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">Dekripsi menggunakan round key yang <strong>sama persis</strong> dengan enkripsi (K0, K1, K2), hanya urutan pemakaiannya dibalik.</p>
+            <div class="row g-3 text-center justify-content-center mt-2">
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K0</div>
+                  <div class="font-mono fw-bold">{{ result.K0|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K0|hex4 }}</div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K1</div>
+                  <div class="font-mono fw-bold">{{ result.K1|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K1|hex4 }}</div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K2</div>
+                  <div class="font-mono fw-bold">{{ result.K2|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K2|hex4 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 2. AddRoundKey(K2) ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseARK2">
+            <i class="bi bi-diagram-2 me-2"></i>2. AddRoundKey (K2)
+          </button>
+        </h2>
+        <div id="dcollapseARK2" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">Ciphertext di-XOR dengan round key <strong>K2</strong> — langkah pertama dari proses dekripsi.</p>
+            {{ m.xor_row(result.add_round_key_2.before, result.add_round_key_2.key, result.add_round_key_2.after, "Ciphertext", "K2") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 3. InvShiftRows ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseISR1">
+            <i class="bi bi-arrow-left-right me-2"></i>3. InvShiftRows
+          </button>
+        </h2>
+        <div id="dcollapseISR1" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">InvShiftRows identik dengan ShiftRows (operasi bersifat <em>self-inverse</em>) — menukar nibble pada baris kedua.</p>
+            {{ m.transform_row(result.inv_shift_rows_1.before, result.inv_shift_rows_1.after, "Swap Row 2") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 4. InvSubNibbles ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseISN1">
+            <i class="bi bi-arrow-repeat me-2"></i>4. InvSubNibbles
+          </button>
+        </h2>
+        <div id="dcollapseISN1" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">Setiap nibble disubstitusi menggunakan tabel <strong>Inverse S-Box</strong>.</p>
+            {{ m.transform_row(result.inv_sub_nibbles_1.before, result.inv_sub_nibbles_1.after, "Inv S-Box") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 5. AddRoundKey(K1) ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseARK1">
+            <i class="bi bi-diagram-2 me-2"></i>5. AddRoundKey (K1)
+          </button>
+        </h2>
+        <div id="dcollapseARK1" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            {{ m.xor_row(result.add_round_key_1.before, result.add_round_key_1.key, result.add_round_key_1.after, "State", "K1") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 6. InvMixColumns ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseIMC">
+            <i class="bi bi-grid-3x3-gap me-2"></i>6. InvMixColumns
+          </button>
+        </h2>
+        <div id="dcollapseIMC" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">Setiap kolom state dikalikan dengan matriks invers <code>[[9,2],[2,9]]</code> pada GF(2⁴).</p>
+            {{ m.transform_row(result.inv_mix_columns.before, result.inv_mix_columns.after, "Inv GF(2⁴) Matrix") }}
+            <div class="mt-3">
+              <button class="btn btn-sm btn-navy" type="button" data-bs-toggle="collapse" data-bs-target="#gfDecWrap">
+                <i class="bi bi-calculator me-1"></i>Lihat Detail Perkalian GF(2⁴)
+              </button>
+              <div class="collapse mt-2" id="gfDecWrap">
+                {{ m.gf_detail_accordion(result.inv_mix_columns.gf_details, "gfDec") }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 7. InvShiftRows (2) ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseISR2">
+            <i class="bi bi-arrow-left-right me-2"></i>7. InvShiftRows
+          </button>
+        </h2>
+        <div id="dcollapseISR2" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            {{ m.transform_row(result.inv_shift_rows_2.before, result.inv_shift_rows_2.after, "Swap Row 2") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 8. InvSubNibbles (2) ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseISN2">
+            <i class="bi bi-arrow-repeat me-2"></i>8. InvSubNibbles
+          </button>
+        </h2>
+        <div id="dcollapseISN2" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            {{ m.transform_row(result.inv_sub_nibbles_2.before, result.inv_sub_nibbles_2.after, "Inv S-Box") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 9. AddRoundKey(K0) — Final ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dcollapseARK0">
+            <i class="bi bi-flag-fill me-2"></i>9. AddRoundKey (K0) — Plaintext Akhir
+          </button>
+        </h2>
+        <div id="dcollapseARK0" class="accordion-collapse collapse" data-bs-parent="#decryptAccordion">
+          <div class="accordion-body">
+            {{ m.xor_row(result.add_round_key_0.before, result.add_round_key_0.key, result.add_round_key_0.after, "State", "K0", "Plaintext") }}
+            <div class="alert alert-success mt-4 d-flex align-items-center gap-2">
+              <i class="bi bi-flag-fill fs-5"></i>
+              <div>
+                Plaintext akhir: <strong class="font-mono">{{ result.plaintext_bits }}</strong>
+                &nbsp;(0x{{ result.plaintext_hex }})
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

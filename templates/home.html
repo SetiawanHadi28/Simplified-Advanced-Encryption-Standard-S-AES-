@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="container position-relative">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-7">
+        <span class="hero-eyebrow"><i class="bi bi-lightning-charge-fill"></i> Kriptografi Blok Sederhana</span>
+        <h1 class="display-5 mt-3 mb-3">Simulasi Interaktif <span style="background: linear-gradient(135deg,#3b82f6,#22d3ee); -webkit-background-clip: text; background-clip:text; color:transparent;">Simplified AES</span></h1>
+        <p class="lead mb-4">
+          Pelajari algoritma S-AES 16-bit secara mendalam — mulai dari Key Expansion,
+          SubNibbles, ShiftRows, MixColumns, hingga AddRoundKey — divisualisasikan
+          langkah demi langkah, lengkap dengan detail perkalian GF(2⁴).
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('encrypt_page') }}" class="btn btn-saes-primary">
+            <i class="bi bi-lock-fill me-2"></i>Coba Enkripsi
+          </a>
+          <a href="{{ url_for('decrypt_page') }}" class="btn btn-saes-outline">
+            <i class="bi bi-unlock-fill me-2"></i>Coba Dekripsi
+          </a>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <span class="badge-tech" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)"><i class="bi bi-grid-3x3-gap me-1"></i>Blok 16-bit</span>
+          <span class="badge-tech" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)"><i class="bi bi-key me-1"></i>Key 16-bit</span>
+          <span class="badge-tech" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)"><i class="bi bi-diagram-3 me-1"></i>GF(2⁴)</span>
+          <span class="badge-tech" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)"><i class="bi bi-arrow-repeat me-1"></i>2 Ronde</span>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="saes-card p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="section-title-badge"><i class="bi bi-terminal"></i> Contoh Cepat</span>
+            <span class="round-badge">S-AES</span>
+          </div>
+          <div class="mb-3">
+            <div class="small text-muted mb-1">Plaintext (16-bit)</div>
+            <div class="font-mono fw-bold" style="letter-spacing:.1em;">1101 0111 0010 1000</div>
+          </div>
+          <div class="mb-3">
+            <div class="small text-muted mb-1">Key (16-bit)</div>
+            <div class="font-mono fw-bold" style="letter-spacing:.1em;">0100 1010 1111 0101</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-center py-2">
+            <i class="bi bi-arrow-down-circle-fill fs-3 text-primary"></i>
+          </div>
+          <div class="p-3 rounded-3" style="background: var(--navy-950); color:#fff;">
+            <div class="small mb-1" style="color:#94a3b8;">Ciphertext</div>
+            <div class="font-mono fw-bold fs-5" style="color:#67e8f9;">0111 0100 0101 0001</div>
+          </div>
+          <a href="{{ url_for('encrypt_page') }}" class="btn btn-navy w-100 mt-3">
+            Jalankan Simulasi Sendiri <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FITUR -->
+<section class="py-5">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="section-title-badge justify-content-center"><i class="bi bi-stars"></i> Fitur Utama</span>
+      <h2 class="mt-2">Semua yang Anda Butuhkan untuk Memahami S-AES</h2>
+      <p class="text-muted col-lg-8 mx-auto">Dirancang untuk mahasiswa, dosen, dan siapa pun yang ingin memahami
+        cara kerja algoritma kriptografi blok secara visual dan interaktif.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="saes-card feature-card">
+          <div class="feature-icon"><i class="bi bi-lock-fill"></i></div>
+          <h5>Enkripsi S-AES</h5>
+          <p class="text-muted small mb-0">Masukkan plaintext & key 16-bit, dapatkan ciphertext dalam format biner maupun heksadesimal.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="saes-card feature-card">
+          <div class="feature-icon"><i class="bi bi-unlock-fill"></i></div>
+          <h5>Dekripsi S-AES</h5>
+          <p class="text-muted small mb-0">Proses invers lengkap — dari AddRoundKey hingga InvSubNibbles — untuk mengembalikan plaintext.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="saes-card feature-card">
+          <div class="feature-icon"><i class="bi bi-diagram-3-fill"></i></div>
+          <h5>Visualisasi Bertahap</h5>
+          <p class="text-muted small mb-0">Setiap transformasi state ditampilkan sebagai matriks 2×2 dengan penjelasan rinci per langkah.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="saes-card feature-card">
+          <div class="feature-icon"><i class="bi bi-table"></i></div>
+          <h5>Tabel Referensi</h5>
+          <p class="text-muted small mb-0">S-Box, Inverse S-Box, matriks MixColumns, RCON, hingga penjelasan GF(2⁴) tersedia lengkap.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ALUR KERJA -->
+<section class="py-5" style="background: var(--gray-100);">
+  <div class="container py-4">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6">
+        <span class="section-title-badge"><i class="bi bi-signpost-split"></i> Alur Algoritma</span>
+        <h2 class="mt-2 mb-4">Struktur Proses Enkripsi S-AES</h2>
+        <div class="timeline-step">
+          <div class="timeline-dot">1</div>
+          <h6 class="mb-1">Key Expansion</h6>
+          <p class="text-muted small mb-0">Membangkitkan tiga round key (K0, K1, K2) dari key 16-bit awal menggunakan RotWord, SubWord, dan RCON.</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">2</div>
+          <h6 class="mb-1">Initial AddRoundKey</h6>
+          <p class="text-muted small mb-0">State awal (plaintext) di-XOR dengan round key K0.</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">3</div>
+          <h6 class="mb-1">Round 1 — Lengkap</h6>
+          <p class="text-muted small mb-0">SubNibbles → ShiftRows → MixColumns → AddRoundKey(K1).</p>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">4</div>
+          <h6 class="mb-1">Round 2 — Final</h6>
+          <p class="text-muted small mb-0">SubNibbles → ShiftRows → AddRoundKey(K2) menghasilkan ciphertext.</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="saes-card p-4">
+          <h6 class="mb-3"><i class="bi bi-diagram-2 me-2 text-primary"></i>Diagram Blok S-AES</h6>
+          <div class="d-flex flex-column gap-2">
+            <div class="p-3 rounded-3 border text-center fw-semibold" style="background:#eff6ff;">Plaintext (16-bit)</div>
+            <div class="text-center"><i class="bi bi-arrow-down text-primary fs-5"></i></div>
+            <div class="p-3 rounded-3 border text-center fw-semibold" style="background:#fef3c7;">AddRoundKey (K0)</div>
+            <div class="text-center"><i class="bi bi-arrow-down text-primary fs-5"></i></div>
+            <div class="p-3 rounded-3 border text-center fw-semibold" style="background:#eff6ff;">SubNibbles → ShiftRows → MixColumns → AddRoundKey (K1)
+              <span class="round-badge ms-2">Round 1</span>
+            </div>
+            <div class="text-center"><i class="bi bi-arrow-down text-primary fs-5"></i></div>
+            <div class="p-3 rounded-3 border text-center fw-semibold" style="background:#eff6ff;">SubNibbles → ShiftRows → AddRoundKey (K2)
+              <span class="round-badge ms-2">Round 2</span>
+            </div>
+            <div class="text-center"><i class="bi bi-arrow-down text-primary fs-5"></i></div>
+            <div class="p-3 rounded-3 border text-center fw-semibold text-white" style="background: var(--navy-900);">Ciphertext (16-bit)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5">
+  <div class="container py-4">
+    <div class="result-panel text-center">
+      <h3 class="text-white mb-2">Siap Mencoba Simulasi S-AES?</h3>
+      <p class="mb-4" style="color: rgba(255,255,255,.75);">Masukkan plaintext dan key Anda sendiri, lalu lihat seluruh proses enkripsi secara transparan.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{{ url_for('encrypt_page') }}" class="btn btn-saes-primary"><i class="bi bi-lock-fill me-2"></i>Mulai Enkripsi</a>
+        <a href="{{ url_for('about_page') }}" class="btn btn-saes-outline"><i class="bi bi-book me-2"></i>Pelajari Teori</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

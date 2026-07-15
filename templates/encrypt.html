@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Encrypt{% endblock %}
+
+{% block content %}
+
+<section class="page-hero page-hero-sm">
+  <div class="container position-relative">
+    <span class="hero-eyebrow"><i class="bi bi-lock-fill"></i> Enkripsi</span>
+    <h1 class="mt-3 mb-2" style="font-size:2.4rem;">Enkripsi S-AES</h1>
+    <p class="lead mb-0">Masukkan plaintext dan key 16-bit untuk melihat seluruh proses enkripsi secara rinci.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+
+    <!-- ================= FORM ================= -->
+    <div class="saes-form-panel mb-5">
+      <form method="POST" action="{{ url_for('encrypt_page') }}" novalidate>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="plaintext" class="form-label saes-label">
+              <i class="bi bi-file-earmark-binary me-1"></i>Plaintext (16-bit biner)
+            </label>
+            <input type="text" class="form-control bit-input" id="plaintext" name="plaintext"
+                   value="{{ plaintext }}" placeholder="cth: 1101011100101000"
+                   maxlength="16" autocomplete="off" data-bit-input data-counter-target="pt-counter" required>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="bit-counter" id="pt-counter">0 / 16 bit</span>
+              <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" id="pt-random" data-random-fill="plaintext">
+                <i class="bi bi-shuffle me-1"></i>Acak
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="key" class="form-label saes-label">
+              <i class="bi bi-key-fill me-1"></i>Key (16-bit biner)
+            </label>
+            <input type="text" class="form-control bit-input" id="key" name="key"
+                   value="{{ key }}" placeholder="cth: 0100101011110101"
+                   maxlength="16" autocomplete="off" data-bit-input data-counter-target="key-counter" required>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="bit-counter" id="key-counter">0 / 16 bit</span>
+              <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-random-fill="key">
+                <i class="bi bi-shuffle me-1"></i>Acak
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 d-flex gap-3 flex-wrap align-items-center">
+          <button type="submit" class="btn btn-saes-primary px-4">
+            <i class="bi bi-lock-fill me-2"></i>Enkripsi Sekarang
+          </button>
+          <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Hanya karakter 0 dan 1, panjang tepat 16 bit.</span>
+        </div>
+      </form>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger d-flex align-items-center gap-2 shadow-sm rounded-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+      <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <div id="hasil" data-has-result="{{ 'true' if result else 'false' }}"></div>
+
+    {% if result %}
+    <!-- ================= HASIL AKHIR ================= -->
+    <div class="result-panel mb-5">
+      <div class="row gy-4 align-items-center">
+        <div class="col-lg-8">
+          <span class="section-title-badge" style="color:#67e8f9;"><i class="bi bi-check-circle-fill"></i> Enkripsi Berhasil</span>
+          <div class="mt-3">
+            <div class="small mb-1" style="color:#94a3b8;">Ciphertext (Biner)</div>
+            <div class="result-value">{{ result.ciphertext_bits }}</div>
+          </div>
+          <div class="mt-3">
+            <div class="small mb-1" style="color:#94a3b8;">Ciphertext (Heksadesimal)</div>
+            <div class="result-value">0x{{ result.ciphertext_hex }}</div>
+          </div>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <button class="result-copy-btn mb-2" data-copy-value="{{ result.ciphertext_bits }}">
+            <i class="bi bi-clipboard me-1"></i>Salin Biner
+          </button><br>
+          <button class="result-copy-btn" data-copy-value="{{ result.ciphertext_hex }}">
+            <i class="bi bi-clipboard me-1"></i>Salin Hex
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STEP BY STEP ================= -->
+    <div class="mb-4 d-flex align-items-center gap-2">
+      <span class="section-title-badge"><i class="bi bi-list-ol"></i> Visualisasi Langkah Demi Langkah</span>
+    </div>
+
+    <div class="accordion" id="encryptAccordion">
+
+      <!-- ===== 1. KEY EXPANSION ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseKE">
+            <i class="bi bi-key me-2"></i>1. Key Expansion
+          </button>
+        </h2>
+        <div id="collapseKE" class="accordion-collapse collapse show" data-bs-parent="#encryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">Key 16-bit dipecah menjadi dua word 8-bit <code>w0</code> dan <code>w1</code>. Round key berikutnya dibangkitkan menggunakan fungsi <code>g(word) = SubWord(RotWord(word)) ⊕ RCON</code>.</p>
+
+            <div class="row g-3 justify-content-center text-center mb-4">
+              <div class="col-auto">{{ m.word_box(result.key_expansion.w0, "w0") }}</div>
+              <div class="col-auto">{{ m.word_box(result.key_expansion.w1, "w1") }}</div>
+            </div>
+
+            <h6 class="mt-4"><span class="round-badge badge-outline">Langkah A</span> Membangkitkan w2 &amp; w3</h6>
+            <div class="table-responsive mt-3">
+              <table class="table saes-table align-middle">
+                <thead><tr><th>Operasi</th><th>Input</th><th>Hasil (biner)</th><th>Hasil (hex)</th></tr></thead>
+                <tbody>
+                  <tr><td>RotWord(w1)</td><td class="font-mono">{{ result.key_expansion.w1|bin8 }}</td><td class="font-mono">{{ result.key_expansion.rotword_w1|bin8 }}</td><td>0x{{ result.key_expansion.rotword_w1|hex2 }}</td></tr>
+                  <tr><td>SubWord(RotWord(w1))</td><td class="font-mono">{{ result.key_expansion.rotword_w1|bin8 }}</td><td class="font-mono">{{ result.key_expansion.subword_w1|bin8 }}</td><td>0x{{ result.key_expansion.subword_w1|hex2 }}</td></tr>
+                  <tr><td>⊕ RCON1</td><td class="font-mono">{{ result.key_expansion.rcon1|bin8 }}</td><td class="font-mono">{{ result.key_expansion.g1|bin8 }} <span class="text-muted">(= g(w1))</span></td><td>0x{{ result.key_expansion.g1|hex2 }}</td></tr>
+                  <tr class="table-primary"><td>w2 = w0 ⊕ g(w1)</td><td class="font-mono">{{ result.key_expansion.w0|bin8 }} ⊕ {{ result.key_expansion.g1|bin8 }}</td><td class="font-mono">{{ result.key_expansion.w2|bin8 }}</td><td>0x{{ result.key_expansion.w2|hex2 }}</td></tr>
+                  <tr class="table-primary"><td>w3 = w2 ⊕ w1</td><td class="font-mono">{{ result.key_expansion.w2|bin8 }} ⊕ {{ result.key_expansion.w1|bin8 }}</td><td class="font-mono">{{ result.key_expansion.w3|bin8 }}</td><td>0x{{ result.key_expansion.w3|hex2 }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h6 class="mt-4"><span class="round-badge badge-outline">Langkah B</span> Membangkitkan w4 &amp; w5</h6>
+            <div class="table-responsive mt-3">
+              <table class="table saes-table align-middle">
+                <thead><tr><th>Operasi</th><th>Input</th><th>Hasil (biner)</th><th>Hasil (hex)</th></tr></thead>
+                <tbody>
+                  <tr><td>RotWord(w3)</td><td class="font-mono">{{ result.key_expansion.w3|bin8 }}</td><td class="font-mono">{{ result.key_expansion.rotword_w3|bin8 }}</td><td>0x{{ result.key_expansion.rotword_w3|hex2 }}</td></tr>
+                  <tr><td>SubWord(RotWord(w3))</td><td class="font-mono">{{ result.key_expansion.rotword_w3|bin8 }}</td><td class="font-mono">{{ result.key_expansion.subword_w3|bin8 }}</td><td>0x{{ result.key_expansion.subword_w3|hex2 }}</td></tr>
+                  <tr><td>⊕ RCON2</td><td class="font-mono">{{ result.key_expansion.rcon2|bin8 }}</td><td class="font-mono">{{ result.key_expansion.g2|bin8 }} <span class="text-muted">(= g(w3))</span></td><td>0x{{ result.key_expansion.g2|hex2 }}</td></tr>
+                  <tr class="table-primary"><td>w4 = w2 ⊕ g(w3)</td><td class="font-mono">{{ result.key_expansion.w2|bin8 }} ⊕ {{ result.key_expansion.g2|bin8 }}</td><td class="font-mono">{{ result.key_expansion.w4|bin8 }}</td><td>0x{{ result.key_expansion.w4|hex2 }}</td></tr>
+                  <tr class="table-primary"><td>w5 = w4 ⊕ w3</td><td class="font-mono">{{ result.key_expansion.w4|bin8 }} ⊕ {{ result.key_expansion.w3|bin8 }}</td><td class="font-mono">{{ result.key_expansion.w5|bin8 }}</td><td>0x{{ result.key_expansion.w5|hex2 }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h6 class="mt-4"><span class="round-badge badge-outline">Hasil</span> Round Key Final</h6>
+            <div class="row g-3 text-center justify-content-center mt-2">
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K0 = w0 ‖ w1</div>
+                  <div class="font-mono fw-bold">{{ result.K0|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K0|hex4 }}</div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K1 = w2 ‖ w3</div>
+                  <div class="font-mono fw-bold">{{ result.K1|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K1|hex4 }}</div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <div class="p-3 rounded-3" style="background: var(--gray-100);">
+                  <div class="round-badge mb-2">K2 = w4 ‖ w5</div>
+                  <div class="font-mono fw-bold">{{ result.K2|bin16 }}</div>
+                  <div class="text-muted small">0x{{ result.K2|hex4 }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 2. INITIAL ADD ROUND KEY ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseARK0">
+            <i class="bi bi-diagram-2 me-2"></i>2. Initial AddRoundKey (K0)
+          </button>
+        </h2>
+        <div id="collapseARK0" class="accordion-collapse collapse" data-bs-parent="#encryptAccordion">
+          <div class="accordion-body">
+            <p class="text-muted">State awal (dari plaintext) di-XOR langsung dengan round key <strong>K0</strong> sebelum masuk ke Round 1.</p>
+            {{ m.xor_row(result.add_round_key_0.before, result.add_round_key_0.key, result.add_round_key_0.after, "State Awal (Plaintext)", "K0") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 3. ROUND 1 ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseR1">
+            <span class="round-badge me-2">Round 1</span> 3. SubNibbles → ShiftRows → MixColumns → AddRoundKey
+          </button>
+        </h2>
+        <div id="collapseR1" class="accordion-collapse collapse" data-bs-parent="#encryptAccordion">
+          <div class="accordion-body">
+
+            <h6><i class="bi bi-1-circle me-2 text-primary"></i>SubNibbles</h6>
+            <p class="text-muted small">Setiap nibble pada state disubstitusi menggunakan tabel S-Box.</p>
+            {{ m.transform_row(result.round1.sub_nibbles.before, result.round1.sub_nibbles.after, "S-Box") }}
+
+            <hr class="my-4">
+            <h6><i class="bi bi-2-circle me-2 text-primary"></i>ShiftRows</h6>
+            <p class="text-muted small">Nibble pada baris kedua (bawah) ditukar posisinya.</p>
+            {{ m.transform_row(result.round1.shift_rows.before, result.round1.shift_rows.after, "Swap Row 2") }}
+
+            <hr class="my-4">
+            <h6><i class="bi bi-3-circle me-2 text-primary"></i>MixColumns</h6>
+            <p class="text-muted small">Setiap kolom state dikalikan dengan matriks konstan <code>[[1,4],[4,1]]</code> pada GF(2⁴).</p>
+            {{ m.transform_row(result.round1.mix_columns.before, result.round1.mix_columns.after, "GF(2⁴) Matrix") }}
+            <div class="mt-3">
+              <button class="btn btn-sm btn-navy" type="button" data-bs-toggle="collapse" data-bs-target="#gfR1Wrap">
+                <i class="bi bi-calculator me-1"></i>Lihat Detail Perkalian GF(2⁴)
+              </button>
+              <div class="collapse mt-2" id="gfR1Wrap">
+                {{ m.gf_detail_accordion(result.round1.mix_columns.gf_details, "gfR1") }}
+              </div>
+            </div>
+
+            <hr class="my-4">
+            <h6><i class="bi bi-4-circle me-2 text-primary"></i>AddRoundKey (K1)</h6>
+            <p class="text-muted small">Hasil MixColumns di-XOR dengan round key <strong>K1</strong>, menghasilkan state akhir Round 1.</p>
+            {{ m.xor_row(result.round1.add_round_key.before, result.round1.add_round_key.key, result.round1.add_round_key.after, "Hasil MixColumns", "K1", "State Akhir Round 1") }}
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 4. ROUND 2 ===== -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseR2">
+            <span class="round-badge me-2">Round 2</span> 4. SubNibbles → ShiftRows → AddRoundKey (Final)
+          </button>
+        </h2>
+        <div id="collapseR2" class="accordion-collapse collapse" data-bs-parent="#encryptAccordion">
+          <div class="accordion-body">
+
+            <h6><i class="bi bi-1-circle me-2 text-primary"></i>SubNibbles</h6>
+            {{ m.transform_row(result.round2.sub_nibbles.before, result.round2.sub_nibbles.after, "S-Box") }}
+
+            <hr class="my-4">
+            <h6><i class="bi bi-2-circle me-2 text-primary"></i>ShiftRows</h6>
+            <p class="text-muted small">Round 2 <strong>tidak</strong> memiliki tahap MixColumns — langsung menuju AddRoundKey final.</p>
+            {{ m.transform_row(result.round2.shift_rows.before, result.round2.shift_rows.after, "Swap Row 2") }}
+
+            <hr class="my-4">
+            <h6><i class="bi bi-3-circle me-2 text-primary"></i>AddRoundKey (K2) — Ciphertext</h6>
+            {{ m.xor_row(result.round2.add_round_key.before, result.round2.add_round_key.key, result.round2.add_round_key.after, "State", "K2", "Ciphertext") }}
+
+            <div class="alert alert-success mt-4 d-flex align-items-center gap-2">
+              <i class="bi bi-flag-fill fs-5"></i>
+              <div>
+                Ciphertext akhir: <strong class="font-mono">{{ result.ciphertext_bits }}</strong>
+                &nbsp;(0x{{ result.ciphertext_hex }})
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

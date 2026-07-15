@@ -1,0 +1,101 @@
+{# ==========================================================================
+   MACRO: state_matrix
+   Menampilkan matriks state 2x2 dalam bentuk card nibble, dengan label.
+   state = [[s0, s2], [s1, s3]]
+   ========================================================================== #}
+{% macro state_matrix(state, label="State", highlight=false, is_key=false) %}
+<div class="state-matrix-wrap">
+  <div class="state-matrix-label">{{ label }}</div>
+  <div class="state-matrix">
+    {% for row in state %}
+      {% for val in row %}
+      <div class="nibble-box {% if highlight %}nibble-highlight{% endif %} {% if is_key %}nibble-key{% endif %}">
+        <span class="nibble-bin">{{ val|bin4 }}</span>
+        <span class="nibble-hex">0x{{ val|hex1 }}</span>
+      </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+  <div class="small text-muted font-mono">{{ state|state_int|bin16 }} &nbsp;(0x{{ state|state_int|hex4 }})</div>
+</div>
+{% endmacro %}
+
+
+{# ==========================================================================
+   MACRO: transform_row
+   Menampilkan "before -> [operasi] -> after" untuk satu transformasi state.
+   ========================================================================== #}
+{% macro transform_row(before, after, op_label, before_label="Sebelum", after_label="Sesudah", is_key=false) %}
+<div class="state-transform-row py-2">
+  {{ state_matrix(before, before_label) }}
+  <div class="text-center">
+    <div class="state-op-badge mb-1"><i class="bi bi-arrow-right me-1"></i>{{ op_label }}</div>
+    <div><i class="bi bi-arrow-right state-arrow"></i></div>
+  </div>
+  {{ state_matrix(after, after_label, highlight=true, is_key=is_key) }}
+</div>
+{% endmacro %}
+
+
+{# ==========================================================================
+   MACRO: xor_row
+   Menampilkan "state XOR key = hasil" (dipakai untuk AddRoundKey)
+   ========================================================================== #}
+{% macro xor_row(before, key, after, before_label="State", key_label="Round Key", after_label="Hasil") %}
+<div class="state-transform-row py-2">
+  {{ state_matrix(before, before_label) }}
+  <div class="fs-3 text-muted fw-bold px-2">⊕</div>
+  {{ state_matrix(key, key_label, is_key=true) }}
+  <div class="fs-3 text-muted fw-bold px-2">=</div>
+  {{ state_matrix(after, after_label, highlight=true) }}
+</div>
+{% endmacro %}
+
+
+{# ==========================================================================
+   MACRO: gf_detail_accordion
+   Menampilkan detail langkah perkalian GF(2^4) dalam sub-accordion.
+   gf_details = list of {title, steps: [str, ...]}
+   ========================================================================== #}
+{% macro gf_detail_accordion(gf_details, parent_id) %}
+<div class="accordion sub-accordion mt-3" id="{{ parent_id }}">
+  {% for item in gf_details %}
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#{{ parent_id }}-item-{{ loop.index }}">
+        <i class="bi bi-calculator me-2"></i>{{ item.title }}
+      </button>
+    </h2>
+    <div id="{{ parent_id }}-item-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#{{ parent_id }}">
+      <div class="accordion-body">
+        <div class="gf-step-box">
+          {% for s in item.steps %}
+            {% if loop.last %}
+              <div class="gf-final">{{ s }}</div>
+            {% else %}
+              <div>{{ s }}</div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{# ==========================================================================
+   MACRO: word_box
+   Menampilkan satu word 8-bit (dipakai di Key Expansion) sebagai kotak kecil.
+   ========================================================================== #}
+{% macro word_box(value, label) %}
+<div class="text-center">
+  <div class="small text-muted mb-1">{{ label }}</div>
+  <div class="px-3 py-2 rounded-3 font-mono fw-bold" style="background: var(--navy-900); color:#67e8f9; display:inline-block;">
+    {{ value|bin8 }}
+  </div>
+  <div class="small text-muted font-mono mt-1">0x{{ value|hex2 }}</div>
+</div>
+{% endmacro %}

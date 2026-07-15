@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}References{% endblock %}
+
+{% block content %}
+
+<section class="page-hero page-hero-sm">
+  <div class="container position-relative">
+    <span class="hero-eyebrow"><i class="bi bi-journal-bookmark-fill"></i> Referensi</span>
+    <h1 class="mt-3 mb-2" style="font-size:2.4rem;">Tabel Referensi S-AES</h1>
+    <p class="lead mb-0 col-lg-8">Seluruh tabel konstanta yang digunakan dalam algoritma S-AES: S-Box, Inverse S-Box, matriks MixColumns, dan nilai RCON.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+
+    <div class="row g-4 mb-5">
+      <!-- S-BOX -->
+      <div class="col-lg-6">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-1"><i class="bi bi-table me-2 text-primary"></i>Tabel S-Box</h5>
+          <p class="text-muted small mb-3">Baris = 2 bit tinggi, Kolom = 2 bit rendah dari nibble input.</p>
+          <div class="table-responsive">
+            <table class="table saes-table mb-0">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>00</th><th>01</th><th>10</th><th>11</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in sbox %}
+                <tr>
+                  <th class="bg-light">{{ ["00","01","10","11"][loop.index0] }}</th>
+                  {% for val in row %}
+                  <td>{{ "%X"|format(val) }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVERSE S-BOX -->
+      <div class="col-lg-6">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-1"><i class="bi bi-table me-2 text-primary"></i>Tabel Inverse S-Box</h5>
+          <p class="text-muted small mb-3">Digunakan pada tahap InvSubNibbles saat proses dekripsi.</p>
+          <div class="table-responsive">
+            <table class="table saes-table mb-0">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>00</th><th>01</th><th>10</th><th>11</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in inv_sbox %}
+                <tr>
+                  <th class="bg-light">{{ ["00","01","10","11"][loop.index0] }}</th>
+                  {% for val in row %}
+                  <td>{{ "%X"|format(val) }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <!-- MIX COLUMNS -->
+      <div class="col-lg-6">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-1"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Matriks MixColumns</h5>
+          <p class="text-muted small mb-3">Dikalikan dengan setiap kolom state pada GF(2⁴) saat enkripsi (Round 1).</p>
+          <div class="d-flex justify-content-center">
+            <table class="table saes-table w-auto mb-0">
+              <tbody>
+                {% for row in mix_matrix %}
+                <tr>{% for val in row %}<td class="px-4">{{ val }}</td>{% endfor %}</tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INV MIX COLUMNS -->
+      <div class="col-lg-6">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-1"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>Matriks Inverse MixColumns</h5>
+          <p class="text-muted small mb-3">Dikalikan dengan setiap kolom state pada GF(2⁴) saat dekripsi.</p>
+          <div class="d-flex justify-content-center">
+            <table class="table saes-table w-auto mb-0">
+              <tbody>
+                {% for row in inv_mix_matrix %}
+                <tr>{% for val in row %}<td class="px-4">{{ val }}</td>{% endfor %}</tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <!-- RCON -->
+      <div class="col-lg-5">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-3"><i class="bi bi-hash me-2 text-primary"></i>Nilai RCON</h5>
+          <table class="table saes-table mb-0">
+            <thead><tr><th>Konstanta</th><th>Hex</th><th>Biner</th></tr></thead>
+            <tbody>
+              <tr><td>RCON1</td><td>0x{{ "%02X"|format(rcon1) }}</td><td>{{ "{:08b}".format(rcon1) }}</td></tr>
+              <tr><td>RCON2</td><td>0x{{ "%02X"|format(rcon2) }}</td><td>{{ "{:08b}".format(rcon2) }}</td></tr>
+            </tbody>
+          </table>
+          <p class="text-muted small mt-3 mb-0">RCON1 digunakan saat membangkitkan w2/w3, sedangkan RCON2 digunakan saat membangkitkan w4/w5 pada tahap Key Expansion.</p>
+        </div>
+      </div>
+
+      <!-- GF EXPLANATION -->
+      <div class="col-lg-7">
+        <div class="saes-card p-4 h-100">
+          <h5 class="mb-3"><i class="bi bi-diagram-3 me-2 text-primary"></i>Penjelasan GF(2⁴)</h5>
+          <p class="small text-muted">
+            GF(2⁴) adalah Galois Field dengan 16 elemen, dipakai sebagai basis aritmatika seluruh
+            operasi nibble pada S-AES (SubNibbles menggunakan pemetaan tabel, sedangkan MixColumns
+            menggunakan perkalian field secara langsung).
+          </p>
+          <ul class="small text-muted mb-0">
+            <li><strong>Penjumlahan (GFAdd)</strong>: setara operasi XOR bit-per-bit.</li>
+            <li><strong>Perkalian (GFMul)</strong>: perkalian polinomial biasa, direduksi modulo
+              polinomial irreducible <code>x⁴+x+1</code> (0x13) apabila derajat hasil ≥ 4.</li>
+            <li><strong>Elemen identitas perkalian</strong>: 0001 (nilai 1).</li>
+            <li><strong>Elemen nol</strong>: 0000.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE LAYOUT -->
+    <div class="saes-card p-4 mb-5">
+      <h5 class="mb-3"><i class="bi bi-diagram-2 me-2 text-primary"></i>Tata Letak State Matrix</h5>
+      <div class="row align-items-center g-4">
+        <div class="col-md-6">
+          <p class="text-muted small">
+            16-bit input (plaintext / ciphertext / key) dipecah menjadi 4 nibble
+            <code>n0 n1 n2 n3</code> dari bit paling signifikan ke paling tidak signifikan, kemudian
+            disusun ke dalam matriks state 2×2 secara kolom-mayor:
+          </p>
+        </div>
+        <div class="col-md-6 text-center">
+          <div class="d-inline-flex gap-4 align-items-center">
+            <div>
+              <div class="font-mono small text-muted mb-2">Input 16-bit</div>
+              <div class="font-mono fw-bold">n0 n1 n2 n3</div>
+            </div>
+            <i class="bi bi-arrow-right fs-3 text-primary"></i>
+            <div class="state-matrix">
+              <div class="nibble-box"><span class="nibble-bin">n0</span></div>
+              <div class="nibble-box"><span class="nibble-bin">n2</span></div>
+              <div class="nibble-box"><span class="nibble-bin">n1</span></div>
+              <div class="nibble-box"><span class="nibble-bin">n3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="saes-card p-4">
+      <h5 class="mb-3"><i class="bi bi-journal-text me-2 text-primary"></i>Sumber &amp; Bacaan Lanjutan</h5>
+      <ul class="small text-muted mb-0">
+        <li class="mb-2">Musa, M. A., Schaefer, E. F., &amp; Wedig, S. (2003). <em>A Simplified AES Algorithm and Its Linear and Differential Cryptanalyses</em>. Cryptologia, 27(2), 148–177.</li>
+        <li class="mb-2">Stallings, W. <em>Cryptography and Network Security: Principles and Practice</em> — bagian ilustrasi Simplified AES.</li>
+        <li class="mb-2">Schaefer, E. F. — Santa Clara University, materi kuliah kriptografi tentang S-AES.</li>
+        <li>National Institute of Standards and Technology (NIST) — FIPS 197, spesifikasi AES asli sebagai rujukan struktur.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
